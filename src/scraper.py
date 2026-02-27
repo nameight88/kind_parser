@@ -1,3 +1,4 @@
+import re
 import time
 import logging
 
@@ -129,17 +130,19 @@ def parse_html_table(html: str, year: int, month: int) -> list[dict]:
         if len(tds) < 10:
             continue
 
-        link_tag = tds[9].find("a")
-        original_link = ""
-        if link_tag and link_tag.get("href"):
-            href = link_tag["href"].strip()
-            original_link = (
-                href if href.startswith("http") else f"https://kind.krx.co.kr{href}"
-            )
+        # 회사명 셀의 <a> onclick에서 종목코드 추출
+        # 예: companysummary_open('00536')
+        company_tag = tds[1].find("a")
+        stock_code = ""
+        if company_tag and company_tag.get("onclick"):
+            match = re.search(r"companysummary_open\('(\d+)'\)", company_tag["onclick"])
+            if match:
+                stock_code = match.group(1)
 
         records.append(
             {
                 "기준일": tds[0].get_text(strip=True),
+                "종목코드": stock_code,
                 "회사명": tds[1].get_text(strip=True),
                 "증자구분": tds[2].get_text(strip=True),
                 "주식의종류": tds[3].get_text(strip=True),
@@ -148,7 +151,6 @@ def parse_html_table(html: str, year: int, month: int) -> list[dict]:
                 "우리사주청약일": tds[6].get_text(strip=True),
                 "구주주청약일": tds[7].get_text(strip=True),
                 "납입일": tds[8].get_text(strip=True),
-                "원문링크": original_link,
             }
         )
 

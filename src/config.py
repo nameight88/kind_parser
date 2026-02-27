@@ -41,9 +41,9 @@ LOG_PATH = os.path.join(DATA_DIR, "crawler.log")
 
 # PostgreSQL 설정
 DB_CONFIG = {
-    "host":     os.getenv("DB_HOST", "localhost"),
-    "port":     int(os.getenv("DB_PORT", "5432")),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", "5432")),
     "database": os.getenv("DB_NAME", "kind_db"),
-    "user":     os.getenv("DB_USER", "postgres"),
+    "user": os.getenv("DB_USER", "postgres"),
     "password": os.getenv("DB_PASSWORD", ""),
 }

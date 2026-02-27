@@ -13,7 +13,7 @@ from config import (
     LOG_PATH, DATA_DIR,
 )
 from scraper import create_session, fetch_month_data
-from db import get_connection, initialize_db, save_records_to_db, get_already_crawled_months
+from db import get_connection, initialize_db, save_records_to_db, get_already_crawled_months, mark_month_crawled
 from csv_writer import save_records_to_csv
 
 # 로깅 설정
@@ -88,6 +88,7 @@ def main():
         logger.info(f"[{idx}/{len(target_months)}] {year}년 {month}월 수집 중...")
 
         records = fetch_month_data(session, year, month)
+        db_save_ok = True  # DB 저장 성공 여부 (0건이면 저장 없이 성공으로 간주)
 
         if records:
             all_new_records.extend(records)
@@ -100,6 +101,14 @@ def main():
                     logger.info(f"  -> DB 저장: {inserted}건 신규 / {skipped}건 중복")
                 except Exception as e:
                     logger.error(f"  -> DB 저장 실패: {e}")
+                    db_save_ok = False
+
+        # DB 저장 성공 시에만 수집 완료로 기록 (실패 시 다음 실행에서 재시도)
+        if db_conn and db_save_ok:
+            try:
+                mark_month_crawled(db_conn, year, month, len(records))
+            except Exception as e:
+                logger.error(f"  -> 수집 완료 월 기록 실패: {e}")
 
         time.sleep(0.5)
 
